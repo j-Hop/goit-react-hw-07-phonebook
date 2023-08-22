@@ -1,7 +1,9 @@
+// import PropTypes from 'prop-types';
 import css from './Contact.module.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectContacts, selectFilter } from 'redux/selectors';
-import { removeContact } from 'redux/contactsStorageReducer';
+import { useCallback, useEffect } from 'react';
+import { deleteContact, fetchContacts } from 'redux/operations';
 
 export const ContactList = () => {
   const contacts = useSelector(selectContacts);
@@ -9,23 +11,36 @@ export const ContactList = () => {
 
   const dispatch = useDispatch();
 
-  const onRemoveContact = contactId => dispatch(removeContact(contactId));
+  const getApiContacts = useCallback(
+    () => dispatch(fetchContacts()),
+    [dispatch]
+  );
+
+  useEffect(() => {
+    getApiContacts();
+  }, [getApiContacts]);
+
+  const onRemoveContact = contactId => dispatch(deleteContact(contactId));
 
   const getFilteredContacts = () => {
-    return contacts.filter(
+    return contacts?.filter(
       contact =>
         contact.name.toLowerCase().includes(filter.toLowerCase()) ||
-        contact.number.toLowerCase().includes(filter.toLowerCase())
+        contact.phone.toLowerCase().includes(filter.toLowerCase())
     );
   };
 
+  const visible = getFilteredContacts();
+
+  if (!visible.length) return null;
+
   return (
     <ul className={css.list}>
-      {getFilteredContacts().map(({ id, name, number }) => {
+      {getFilteredContacts().map(({ id, name, phone }) => {
         return (
           <li className={css.items} key={id}>
             <p>{name} </p>
-            <p>: {number}</p>
+            <p>: {phone}</p>
             <button type="button" onClick={() => onRemoveContact(id)}>
               Delete
             </button>
